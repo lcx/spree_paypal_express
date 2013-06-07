@@ -134,7 +134,7 @@ module Spree
       gateway = paypal_gateway
 
       method = Spree::Config[:auto_capture] ? :purchase : :authorize
-      ppx_auth_response = gateway.send(method, (@order.total*100).to_i, opts)
+      ppx_auth_response = gateway.send(method, (@order.read_attribute(:total)*100).to_i, opts)
 
       paypal_account = Spree::PaypalAccount.find_by_payer_id(params[:PayerID])
 
@@ -293,15 +293,15 @@ module Spree
         credits_total = credits.map {|i| i[:amount] * i[:quantity] }.sum
       end
 
-      if payment_method.preferred_cart_checkout and (order.shipping_method.blank? or order.ship_total == 0)
+      if payment_method.preferred_cart_checkout and (order.shipping_method.blank? or order.ship_total_raw == 0)
         shipping_cost  = shipping_options[:shipping_options].first[:amount]
-        order_total    = (order.total * 100 + (shipping_cost)).to_i
+        order_total    = (order.read_attribute(:total) * 100 + (shipping_cost)).to_i
         shipping_total = (shipping_cost).to_i
       else
-        order_total    = (order.total * 100).to_i
-        shipping_total = (order.ship_total * 100).to_i
+        order_total    = (order.read_attribute(:total) * 100).to_i
+        shipping_total = (order.ship_total_raw * 100).to_i
       end
-
+debugger
       opts = { :return_url        => paypal_confirm_order_checkout_url(order, :payment_method_id => payment_method_id),
                :cancel_return_url => edit_order_checkout_url(order, :state => :payment),
                :order_id          => order.number,
@@ -311,7 +311,7 @@ module Spree
                :tax               => (order.tax_total*100).to_i,
                :shipping          => shipping_total,
                :money             => order_total,
-               :max_amount        => (order.total * 300).to_i}
+               :max_amount        => (order.read_attribute(:total) * 300).to_i}
 
       if stage == "checkout"
         opts[:handling] = 0
@@ -325,7 +325,7 @@ module Spree
         if payment_method.preferred_cart_checkout
           opts[:handling] = 0
         else
-          opts[:handling] = (order.total*100).to_i - opts.slice(:subtotal, :tax, :shipping).values.sum
+          opts[:handling] = (order.read_attribute(:total)*100).to_i - opts.slice(:subtotal, :tax, :shipping).values.sum
         end
       end
 
