@@ -301,7 +301,7 @@ module Spree
         order_total    = (order.read_attribute(:total) * 100).to_i
         shipping_total = (order.ship_total_raw * 100).to_i
       end
-
+debugger
       opts = { :return_url        => paypal_confirm_order_checkout_url(order, :payment_method_id => payment_method_id),
                :cancel_return_url => edit_order_checkout_url(order, :state => :payment),
                :order_id          => order.number,
