@@ -301,14 +301,13 @@ module Spree
         order_total    = (order.read_attribute(:total) * 100).to_i
         shipping_total = (order.ship_total_raw * 100).to_i
       end
-
       opts = { :return_url        => paypal_confirm_order_checkout_url(order, :payment_method_id => payment_method_id),
                :cancel_return_url => edit_order_checkout_url(order, :state => :payment),
                :order_id          => order.number,
                :custom            => order.number,
                :items             => items,
                :subtotal          => ((order.read_attribute(:item_total) * 100) + credits_total).to_i,
-               :tax               => (order.tax_total*100).to_i,
+               :tax               => ((order.tax_total - order.adjustments.eligible.import_tax.map(&:amount).sum) *100).to_i,
                :shipping          => shipping_total,
                :money             => order_total,
                :max_amount        => (order.read_attribute(:total) * 300).to_i}
